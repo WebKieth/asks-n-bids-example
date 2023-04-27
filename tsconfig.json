@@ -2,5 +2,8 @@
   "compilerOptions": {
     "jsx": "react-jsx",
     "esModuleInterop": true,
+    "paths": {
+      "stream": ["./node_modules/readable-stream"]
+    }
   },
 }

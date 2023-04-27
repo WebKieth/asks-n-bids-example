@@ -1,7 +1,10 @@
-import { createContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import detectEthereumProvider from '@metamask/detect-provider';
 
 import { BaseProviderProps } from "../typed";
+import MetaMaskSDK from "@metamask/sdk";
+import Web3 from 'web3'
+import Web3Token from 'web3-token';
 
 export interface MetaMaskEthereumProvider {
   isMetaMask?: boolean;
@@ -11,26 +14,34 @@ export interface MetaMaskEthereumProvider {
   addListener(eventName: string | symbol, listener: (...args: any[]) => void): this;
   removeListener(eventName: string | symbol, listener: (...args: any[]) => void): this;
   removeAllListeners(event?: string | symbol): this;
-  enable: Promise<any>
 } 
-export const Web3Context = createContext<MetaMaskEthereumProvider | undefined>(undefined)
+export const Web3Context = createContext<{ token: string } | null>(null)
 
 type ProviderProp = BaseProviderProps
 
 export const Web3Provider = ({ children }: ProviderProp) => {
   const METAMASK_EXT_URL = 'https://chrome.google.com/webstore/detail/metamask/nkbihfbeogaeaoehlefnkodbefgpgknn'
   const [detected, setDetected] = useState<MetaMaskEthereumProvider | null>(null);
+  const [token, setToken] = useState('')
+  const eth = useRef(new MetaMaskSDK().getProvider())
+  const web3 = useRef()
   useEffect(() => {
     (async () => {
       const detectedProvider = await detectEthereumProvider()
-      //@ts-ignore
       setDetected(detectedProvider)
+      if (detectedProvider === null) return
       //@ts-ignore
-      if (detectedProvider !== null) await detectedProvider.enable()
+      web3.current = new Web3(window.ethereum)
+      await eth.current.request({ method: 'eth_requestAccounts'});
+      //@ts-ignore
+      const addr = (await web3.current.eth.getAccounts())[0]
+       //@ts-ignore
+      const token = await Web3Token.sign(msg => web3.current.eth.personal.sign(msg, addr), '1d');
+      setToken(token)
     })()
   }, [])
   if (detected) {
-    return <Web3Context.Provider value={detected}>
+    return <Web3Context.Provider value={{token}}>
       {children}
     </Web3Context.Provider>
   } else {
@@ -51,5 +62,6 @@ export const Web3Provider = ({ children }: ProviderProp) => {
         >reload</span> the page.</p>
     </div>
   }
-  
 }
+
+export const useWeb3Provided = () => useContext(Web3Context)

@@ -36,7 +36,6 @@ export const AsksAndBidsProvider = ({children}: {children: ReactNode}) => {
   }
 
   const createModel = (key: 'asks' | 'bids') => {
-    console.log(key, source)
     if (!source[key]) return null
     const model = {}
     source[key].forEach((sourceStatItem: string[], rowIndex: number) => {

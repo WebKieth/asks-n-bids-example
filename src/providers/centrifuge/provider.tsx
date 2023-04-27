@@ -1,5 +1,6 @@
-import { ReactNode, createContext, useEffect } from "react";
+import { ReactNode, createContext, useEffect, useRef } from "react";
 import { Centrifuge, SubscribingContext } from 'centrifuge';
+import { useWeb3Provided } from "../web3/provider";
 
 type TCentrifugeContext = {
   addSubscription: (name: string) => void,
@@ -9,16 +10,16 @@ type TCentrifugeContext = {
 const CentrifugeContext = createContext<TCentrifugeContext | null>(null)
 
 export const CentrifugeProvider = ({ children }: { children: ReactNode }) => {
-
-  const centrifuge = new Centrifuge('wss://api.testnet.rabbitx.io/ws', {debug: true});
-  const subsctiptions = centrifuge.subscriptions()
+  const { token } = useWeb3Provided()
+  const centrifuge = useRef<Centrifuge>(new Centrifuge('wss://api.testnet.rabbitx.io/ws', {debug: true, token}));
+  const subsctiptions = centrifuge.current.subscriptions()
 
   const createSubscription = (name: string, resubscribe = false) => {
     if (Object.keys(subsctiptions).includes(name)) {
       if (resubscribe === false) return
       subsctiptions[name].unsubscribe()
     }
-    const sub = centrifuge.newSubscription(name)
+    const sub = centrifuge.current.newSubscription(name)
     sub.on('subscribing', handleSocketEvent)
     sub.subscribe()
     return sub
@@ -37,8 +38,8 @@ export const CentrifugeProvider = ({ children }: { children: ReactNode }) => {
   }
 
   useEffect(() => {
-    centrifuge.connect()
-    createSubscription('orderbook:BTC')
+    centrifuge.current.connect()
+    createSubscription('orderbook:BTC-USD')
   }, [])
 
 

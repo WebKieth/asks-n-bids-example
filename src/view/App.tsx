@@ -1,6 +1,7 @@
 import { CentrifugeProviderEmulator } from "../providers/centrifuge/emulator";
-import { Web3Provider } from "../providers/web3"
 import { AsksNBidsPage } from "./components/page/AsksNBids";
+import { Web3Provider } from "../providers/web3/provider";
+import { CentrifugeProvider } from "../providers/centrifuge/provider";
 
 
 
@@ -8,7 +9,9 @@ const App = () => {
   return (
     <Web3Provider>
       <CentrifugeProviderEmulator>
-        <AsksNBidsPage />
+        <CentrifugeProvider>
+          <AsksNBidsPage />
+        </CentrifugeProvider>
       </CentrifugeProviderEmulator>
     </Web3Provider>
   )
